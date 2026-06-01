@@ -21,7 +21,7 @@ function password_meets_policy($password)
     return is_string($password) && preg_match('/^(?=.*[A-Za-z])(?=.*[^A-Za-z0-9]).{8,}$/', $password);
 }
 
-$rawInput = file_get_contents('php://input');
+$rawInput = (string) file_get_contents('php://input');
 $body = json_decode($rawInput, true);
 if (!is_array($body)) {
     respond(400, ['error' => 'Invalid request body.']);
@@ -78,6 +78,9 @@ try {
         }
 
         $check = $pdo->prepare('SELECT id FROM customers WHERE email = ? OR username = ? LIMIT 1');
+        if ($check === false) {
+            respond(500, ['error' => 'Database error.']);
+        }
         $check->execute([$email, $newUsername]);
         if ($check->fetch()) {
             respond(409, ['error' => 'Email or username already exists.']);
@@ -107,6 +110,9 @@ try {
     }
 
     $query = $pdo->prepare('SELECT id, name, email, username, password_hash FROM customers WHERE email = ? OR username = ? LIMIT 1');
+    if ($query === false) {
+        respond(500, ['error' => 'Database error.']);
+    }
     $query->execute([$identifier, $identifier]);
     $customer = $query->fetch();
 

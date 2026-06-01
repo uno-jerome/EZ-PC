@@ -65,7 +65,7 @@ function getConnection()
 
 function readJsonBody()
 {
-    $rawInput = file_get_contents('php://input');
+    $rawInput = (string) file_get_contents('php://input');
     $body = json_decode($rawInput, true);
     return is_array($body) ? $body : [];
 }
@@ -128,6 +128,9 @@ function normalizeItems($items)
 function getCustomerRow($pdo, $customerId)
 {
     $statement = $pdo->prepare('SELECT id, name, email, username FROM customers WHERE id = ? LIMIT 1');
+    if ($statement === false) {
+        respond(500, ['error' => 'Database error.']);
+    }
     $statement->execute([$customerId]);
     $customer = $statement->fetch();
     if (!$customer) {
@@ -165,6 +168,9 @@ function fetchProductMap($pdo, $items, $branchLocation)
     ";
 
     $statement = $pdo->prepare($sql);
+    if ($statement === false) {
+        respond(500, ['error' => 'Database error.']);
+    }
     $statement->execute(array_merge([$branchLocation, $branchLocation], $itemIds));
 
     $productMap = [];
@@ -218,6 +224,9 @@ function fetchOrdersForCustomer($pdo, $customerId)
          WHERE o.customer_id = ?
          ORDER BY o.order_date DESC, o.order_id DESC'
     );
+    if ($orderStatement === false) {
+        respond(500, ['error' => 'Database error.']);
+    }
     $orderStatement->execute([$customerId]);
     $orders = $orderStatement->fetchAll();
 
@@ -237,6 +246,9 @@ function fetchOrdersForCustomer($pdo, $customerId)
          WHERE oi.order_id IN ($placeholders)
          ORDER BY oi.id ASC"
     );
+    if ($itemStatement === false) {
+        respond(500, ['error' => 'Database error.']);
+    }
     $itemStatement->execute($orderIds);
 
     $itemsByOrderId = [];
@@ -261,6 +273,9 @@ function fetchOrdersForCustomer($pdo, $customerId)
 function ensureOrderBelongsToCustomer($pdo, $orderId, $customerId)
 {
     $statement = $pdo->prepare('SELECT order_id, status, payment_method FROM orders WHERE order_id = ? AND customer_id = ? LIMIT 1');
+    if ($statement === false) {
+        respond(500, ['error' => 'Database error.']);
+    }
     $statement->execute([$orderId, $customerId]);
     $order = $statement->fetch();
     if (!$order) {
@@ -284,7 +299,12 @@ function callCreateOrderHeaderProcedure($pdo, $customerId, $paymentMethod, $cont
         $shippingFee,
     ]);
     // Retrieve the OUT parameter set by the stored procedure
-    $row = $pdo->query('SELECT @out_order_id AS order_id')->fetch();
+    $selectStmt = $pdo->query('SELECT @out_order_id AS order_id');
+    if ($selectStmt === false) {
+        throw new RuntimeException('Failed to retrieve created order id.');
+    }
+    /** @var PDOStatement $selectStmt */
+    $row = $selectStmt->fetch();
     $orderId = isset($row['order_id']) ? (int)$row['order_id'] : 0;
     if ($orderId <= 0) {
         throw new RuntimeException('Failed to create order in database.');
@@ -303,6 +323,9 @@ function callAddOrderItemProcedure($pdo, $orderId, $itemId, $quantity)
 function fetchPaymentForOrder($pdo, $orderId)
 {
     $statement = $pdo->prepare('SELECT transaction_amount, method, payment_status, reference_number FROM payments WHERE order_id = ? LIMIT 1');
+    if ($statement === false) {
+        respond(500, ['error' => 'Database error.']);
+    }
     $statement->execute([$orderId]);
     $payment = $statement->fetch();
     if (!$payment) {
@@ -440,7 +463,7 @@ function createOrder($pdo, $body)
             $orderRow['total'],
             $paymentMethod,
             $paymentStatus,
-            sprintf('web-order-%d', $orderId),
+            sprintf('web-order-%d', $orderId)
         );
 
         if ($paymentStatus === PAYMENT_STATUS_PAID) {

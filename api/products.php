@@ -106,6 +106,10 @@ try {
     ';
 
     $statement = $pdo->query($sql);
+    if ($statement === false) {
+        throw new RuntimeException('Failed to query products.');
+    }
+    /** @var PDOStatement $statement */
 
     $products = [];
     while ($row = $statement->fetch()) {

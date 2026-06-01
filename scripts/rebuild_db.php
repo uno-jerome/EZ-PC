@@ -78,7 +78,12 @@ function fetchAllIfTableExists(PDO $pdo, string $tableName, string $orderBy = ''
         $sql .= ' ORDER BY ' . $orderBy;
     }
 
-    return $pdo->query($sql)->fetchAll();
+    $stmt = $pdo->query($sql);
+    if ($stmt === false) {
+        throw new RuntimeException('Failed to query table: ' . $tableName);
+    }
+
+    return $stmt->fetchAll();
 }
 
 function fetchLegacySnapshot(PDO $pdo): array
@@ -638,7 +643,11 @@ function printSummary(PDO $pdo): void
             echo $table . '=missing' . PHP_EOL;
             continue;
         }
-        $count = $pdo->query(sprintf('SELECT COUNT(*) FROM `%s`', $table))->fetchColumn();
+        $countStmt = $pdo->query(sprintf('SELECT COUNT(*) FROM `%s`', $table));
+        if ($countStmt === false) {
+            throw new RuntimeException('Failed to query count for table: ' . $table);
+        }
+        $count = $countStmt->fetchColumn();
         echo $table . '=' . $count . PHP_EOL;
     }
 }
