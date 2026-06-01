@@ -1,59 +1,81 @@
-# Estore (School E-commerce Project)
+# Estore
 
-This repository contains a simple e-commerce website + PHP API, plus the database schema and presentation artifacts for the ITC database requirements.
+Hi! This is our school e-commerce project.
 
-## Quick Start (Windows)
+It has a simple frontend, a PHP backend API, and a MySQL/MariaDB database.
 
-1) Create / rebuild the database schema (MariaDB/MySQL):
+## Quick Run
 
-- Run the schema file: [item_database_structure_new.sql](item_database_structure_new.sql)
-- Or (optional) use the rebuild helper:
-  - `php scripts/rebuild_db.php`
+### 1) Set up the database first
 
-2) Start the website + API:
+Run [item_database_structure_new.sql](item_database_structure_new.sql) in your MySQL/MariaDB server.
 
-- Run: [start-server.cmd](start-server.cmd)
-- Open: http://127.0.0.1:8000
+This is the recommended default because it gives you a clean and consistent setup.
 
-Manual start (any OS):
+Optional (for quick demo data):
+- Run [archive/item_database_latest.sql](archive/item_database_latest.sql)
+- Use this when you want preloaded sample records right away.
+
+If you want a helper script instead:
+
+```bash
+php scripts/rebuild_db.php
+```
+
+### 2) Start the website + API
+
+Easiest on Windows:
+- Run [start-server.cmd](start-server.cmd)
+
+Manual way (any OS):
 
 ```bash
 php -S 127.0.0.1:8000 -t .
 ```
 
-## Where Things Are
+Open this in your browser:
+- http://127.0.0.1:8000
 
-- Website + API (web root): this repository root
-  - Website entry: [index.html](index.html)
-  - API endpoints: [api/](api/)
-- Database schema (canonical): [item_database_structure_new.sql](item_database_structure_new.sql)
-- Presentation artifacts:
-  - [PRESENTATION.md](PRESENTATION.md)
-  - [PRESENTATION.sql](PRESENTATION.sql)
-  - [ERD.md](ERD.md)
-- Admin/demo scripts:
-  - [scripts/](scripts/)
+## Main Files
+
+- Entry page: [index.html](index.html)
+- API: [api/](api/)
+- Frontend JS: [js/](js/)
+- Styles: [style.css](style.css)
+- DB schema: [item_database_structure_new.sql](item_database_structure_new.sql)
+- Full dump with structure + sample data: [archive/item_database_latest.sql](archive/item_database_latest.sql)
+- Presentation docs: [PRESENTATION.md](PRESENTATION.md), [PRESENTATION.sql](PRESENTATION.sql), [ERD.md](ERD.md)
+- Utility/admin scripts: [scripts/](scripts/)
 
 ## API Endpoints
 
-- Products (public): [/api/products.php](api/products.php)
-- Auth (signup/login): [/api/auth.php](api/auth.php)
-- Orders (create/list): [/api/orders.php](api/orders.php)
+- Products: [api/products.php](api/products.php)
+- Auth (signup/login): [api/auth.php](api/auth.php)
+- Orders: [api/orders.php](api/orders.php)
 
-## Configuration (DB Credentials)
+## DB Environment Variables
 
-The PHP API reads credentials from environment variables:
+The API checks these values:
 
-- `DB_HOST` (default: 127.0.0.1)
-- `DB_PORT` (default: 3306)
-- `DB_NAME` (default: itc_database_admin)
-- `DB_USER` (default: root)
-- `DB_PASSWORD` (default: root)
+- DB_HOST (default: 127.0.0.1)
+- DB_PORT (default: 3306)
+- DB_NAME (default: itc_database_admin)
+- DB_USER (default: root)
+- DB_PASSWORD (default: root)
 
-Tip: Don’t commit real passwords. The API reads environment variables directly. On Windows PowerShell you can set them like:
+PowerShell example:
 
 ```powershell
 $env:DB_HOST = '127.0.0.1'
 $env:DB_USER = 'root'
 $env:DB_PASSWORD = 'root'
 ```
+
+## Quick Troubleshooting
+
+- `could not find driver`: enable `pdo_mysql` in your PHP setup.
+- DB connection error: check your DB credentials and make sure MySQL/MariaDB is running.
+
+## Note
+
+Please do not commit real passwords or private credentials.
