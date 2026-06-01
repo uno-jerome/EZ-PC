@@ -1,0 +1,132 @@
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EZ PC - Ecommerce Store</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <a href="#" class="logo" onclick="showPage('home')">
+                    EZ PC
+                </a>
+                <nav>
+                    <a href="#" onclick="showPage('home')">Home</a>
+                    <a href="#" onclick="showPage('products')">All Products</a>
+                </nav>
+                <div class="search-bar">
+                    <span class="search-icon">🔍</span>
+                    <input type="search" placeholder="Search products..." id="searchInput">
+                </div>
+                <div class="header-actions">
+                    <button class="theme-toggle-btn" id="themeToggleBtn" type="button" onclick="toggleTheme()">Light mode</button>
+                    <button class="purchases-header-btn" onclick="showPage('purchases')">My Purchases</button>
+                    <div class="profile-menu-wrapper">
+                        <button class="profile-btn" id="profileButton" onclick="toggleProfileMenu(event)">
+                            <span id="profileButtonLabel">Profile</span>
+                            <span aria-hidden="true">▾</span>
+                        </button>
+                        <div class="profile-menu hidden" id="profileMenu"></div>
+                    </div>
+                    <button class="cart-btn" onclick="showPage('cart')">
+                        🛒
+                        <span class="cart-badge" id="cartBadge">0</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="header-category-bar">
+            <div class="container">
+                <nav class="header-category-nav" id="headerCategoryNav" aria-label="Shop by category">
+                    <!-- Populated by router.js / state -->
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="mainContent"></main>
+
+    <template id="product-card-template">
+        <div class="product-card" onclick="showPage('product', { productId: '{{id}}' })">
+            <img class="product-image" src="{{image}}" alt="{{name}}" />
+            <div class="product-info">
+                <h3 class="product-name">{{name}}</h3>
+                <div class="product-meta-row">
+                    <div class="product-rating">
+                        <span class="star">★</span>
+                        <span>{{rating}}</span>
+                    </div>
+                    <span class="product-card-price">{{price}}</span>
+                </div>
+                <div class="product-stock-row">
+                    <span class="product-stock-badge {{stockBadgeClass}}">{{stockLabel}}</span>
+                </div>
+                <div class="product-footer">
+                    <button class="btn btn-primary" {{addButtonDisabled}} onclick="event.stopPropagation(); addToCart('{{id}}')">
+                        {{addButtonLabel}}
+                    </button>
+                    <button class="btn btn-outline" {{buyButtonDisabled}} onclick="event.stopPropagation(); addToCart('{{id}}'); showPage('cart')">
+                        {{buyButtonLabel}}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-column">
+                    <h3>EZ PC</h3>
+                    <p style="color: #9ca3af; font-size: 0.875rem;">Your one-stop shop for quality products at great prices.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Shop</h3>
+                    <ul>
+                        <li>Products</li>
+                        <li>Desktops</li>
+                        <li>Laptops</li>
+                        <li>Components</li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Support</h3>
+                    <ul>
+                        <li>Contact Us</li>
+                        <li>Shipping Info</li>
+                        <li>Returns</li>
+                        <li>FAQ</li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Legal</h3>
+                    <ul>
+                        <li>Privacy Policy</li>
+                        <li>Terms of Service</li>
+                        <li>Cookie Policy</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                © 2026 EZ PC. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // If you open the site via VS Code Live Server (e.g. http://127.0.0.1:5500),
+        // the PHP API still needs to run separately (default: http://127.0.0.1:8000).
+        // This sets a default API base URL for local development.
+        if (!window.ESTORE_API_BASE_URL && location.hostname === '127.0.0.1' && location.port && location.port !== '8000') {
+            window.ESTORE_API_BASE_URL = 'http://127.0.0.1:8000/api';
+        }
+    </script>
+    <script type="module" src="script.js"></script>
+</body>
+</html>
