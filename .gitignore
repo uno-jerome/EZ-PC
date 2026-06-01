@@ -46,3 +46,8 @@ node_modules/
 combined_products.xlsx
 *.sqlite
 *.sqlite3
+
+# ------------------------------------------------------------
+# Copilot / GitHub instruction files (local only)
+# ------------------------------------------------------------
+.github/instructions/
