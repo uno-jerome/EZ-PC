@@ -2,6 +2,10 @@
 
 This is the simple file to use for the project presentation.
 
+## Presentation Flow
+- The slide sequence is described in `PRESENTATION_FLOW.md`.
+- That flow file follows this main presentation guide and provides the speaking points for each slide.
+
 For slide-by-slide speaking points, also see [PRESENTATION_FLOW.md](PRESENTATION_FLOW.md).
 
 ## Use These Files Only
