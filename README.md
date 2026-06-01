@@ -76,6 +76,3 @@ $env:DB_PASSWORD = 'root'
 - `could not find driver`: enable `pdo_mysql` in your PHP setup.
 - DB connection error: check your DB credentials and make sure MySQL/MariaDB is running.
 
-## Note
-
-Please do not commit real passwords or private credentials.
