@@ -17,7 +17,6 @@ const DEFAULT_DB_PASSWORD = 'root';
 const DEFAULT_BRANCH_LOCATION = 'Main Warehouse';
 const SHIPPING_THRESHOLD = 50.0;
 const SHIPPING_FEE = 9.99;
-const TAX_RATE = 0.08;
 const STATUS_TO_PAY = 'To Pay';
 const STATUS_TO_SHIP = 'To Ship';
 const STATUS_TO_RECEIVE = 'To Receive';
@@ -28,6 +27,8 @@ const PAYMENT_METHOD_CARD = 'Card';
 const PAYMENT_METHOD_COD = 'Cash on Delivery';
 const PAYMENT_STATUS_PAID = 'Paid';
 const PAYMENT_STATUS_PENDING = 'Pending';
+// Note: VAT is display-only in the frontend (prices in DB are VAT-inclusive).
+// Server uses stored procedures to compute stored totals; do not hardcode VAT here.
 
 function respond($statusCode, $payload)
 {
@@ -271,20 +272,22 @@ function ensureOrderBelongsToCustomer($pdo, $orderId, $customerId)
 
 function callCreateOrderHeaderProcedure($pdo, $customerId, $paymentMethod, $contactNumber, $shippingAddress, $branchLocation, $shippingFee)
 {
-    $statement = $pdo->prepare('CALL sp_create_order_header(?, ?, ?, ?, ?, ?, @new_order_id)');
-    $statement->execute([
+    // Use the existing stored procedure to create the order header and let
+    // database-side logic compute subtotal/vat/grand_total based on order_items.
+    $stmt = $pdo->prepare('CALL sp_create_order_header(?, ?, ?, ?, ?, ?, @out_order_id)');
+    $stmt->execute([
         $customerId,
         $paymentMethod,
-        $contactNumber !== '' ? $contactNumber : null,
-        $shippingAddress !== '' ? $shippingAddress : null,
+        $contactNumber,
+        $shippingAddress,
         $branchLocation,
         $shippingFee,
     ]);
-    $statement->closeCursor();
-
-    $orderId = (int)$pdo->query('SELECT @new_order_id')->fetchColumn();
+    // Retrieve the OUT parameter set by the stored procedure
+    $row = $pdo->query('SELECT @out_order_id AS order_id')->fetch();
+    $orderId = isset($row['order_id']) ? (int)$row['order_id'] : 0;
     if ($orderId <= 0) {
-        throw new RuntimeException('Stored procedure did not return a valid order ID.');
+        throw new RuntimeException('Failed to create order in database.');
     }
 
     return $orderId;

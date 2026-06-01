@@ -5,6 +5,18 @@ import { fetchOrdersFromAPI, updateOrderInAPI } from '../api.js';
 // The tabs shown at the top, matching Shopee-style order statuses
 const PURCHASE_TABS = ['All', 'To Pay', 'To Ship', 'To Receive', 'Completed', 'Cancelled', 'Return Refund'];
 
+/**
+ * Maps database status values to display status values.
+ * Handles both current (To Pay, To Ship, etc.) and alternative (Processing, Shipped) status names.
+ */
+function getDisplayStatus(dbStatus) {
+    const statusMap = {
+        'Processing': 'To Ship',
+        'Shipped': 'To Receive',
+    };
+    return statusMap[dbStatus] || dbStatus;
+}
+
 let _backendOrders = [];
 let _backendOrdersLoading = false;
 let _backendOrdersError = '';
@@ -112,6 +124,18 @@ export async function cancelOrder(orderId) {
         return;
     }
 
+    // Find the order and check if it can be cancelled
+    const order = loadOrders().find(o => String(o.id) === String(orderId));
+    const displayStatus = order ? getDisplayStatus(order.status) : null;
+
+    // Only allow cancellation for "To Pay" and "To Ship" statuses
+    const cancellableStatuses = ['To Pay', 'To Ship'];
+    if (!cancellableStatuses.includes(displayStatus)) {
+        _backendOrdersError = `Orders in "${displayStatus}" status cannot be cancelled.`;
+        _rerender();
+        return;
+    }
+
     try {
         await updateOrderInAPI(state.currentUser.id, orderId, 'cancel');
         await initPurchasesPage();
@@ -160,7 +184,10 @@ function _buildPurchasesHtml() {
         `;
     }
 
-    const allOrders = loadOrders();
+    const allOrders = loadOrders().map(order => ({
+        ...order,
+        status: getDisplayStatus(order.status)
+    }));
 
     if (_backendOrdersLoading && allOrders.length === 0) {
         return `
@@ -279,6 +306,10 @@ function _buildOrderCard(order) {
         ? 'Payment: Waiting for checkout'
         : `Payment: ${order.paymentMethod || 'Card'}`;
 
+    // Determine which statuses allow cancellation
+    const cancellableStatuses = ['To Pay', 'To Ship'];
+    const canCancel = cancellableStatuses.includes(order.status);
+
     let actionsHtml = '';
     if (order.status === 'To Pay') {
         actionsHtml = `
@@ -286,16 +317,27 @@ function _buildOrderCard(order) {
             <button class="btn btn-outline purchase-action-btn" onclick="cancelOrder('${order.id}')">Cancel Order</button>
         `;
     } else if (order.status === 'To Ship') {
+        // Order is being prepared for shipment - can still be cancelled
         actionsHtml = `
-            <div class="purchase-status-note">Only the seller or admin should move this order to the shipping stages.</div>
+            <button class="btn btn-outline purchase-action-btn" onclick="cancelOrder('${order.id}')">Cancel Order</button>
         `;
     } else if (order.status === 'To Receive') {
         actionsHtml = `
             <button class="btn btn-primary purchase-action-btn" onclick="confirmOrderReceived('${order.id}')">Order Received</button>
+            <button class="btn btn-outline purchase-action-btn" disabled title="Cannot cancel order that is already shipped">⚠️ Cancel (Unavailable)</button>
         `;
     } else if (order.status === 'Completed') {
         actionsHtml = `
             <button class="btn btn-outline purchase-action-btn" onclick="requestReturnRefund('${order.id}')">Return / Refund</button>
+            <button class="btn btn-outline purchase-action-btn" disabled title="Cannot cancel completed order">⚠️ Cancel (Unavailable)</button>
+        `;
+    } else if (order.status === 'Cancelled') {
+        actionsHtml = `
+            <button class="btn btn-outline purchase-action-btn" disabled title="Order is already cancelled">✓ Cancelled</button>
+        `;
+    } else if (order.status === 'Return Refund') {
+        actionsHtml = `
+            <button class="btn btn-outline purchase-action-btn" disabled title="Cannot cancel order in return/refund process">⚠️ Cancel (Unavailable)</button>
         `;
     }
 

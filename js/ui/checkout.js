@@ -235,14 +235,17 @@ async function validateCartAgainstLatestStock() {
 
 export function renderCheckoutPage() {
   const items = getCartItems();
-  const subtotal = getCartTotal();
+  const totalWithVat = getCartTotal(); // Database prices already include VAT
   const shipping =
-    subtotal > CHECKOUT_CONFIG.freeShippingThreshold
+    totalWithVat > CHECKOUT_CONFIG.freeShippingThreshold
       ? 0
       : CHECKOUT_CONFIG.shippingFee;
-  const tax = subtotal * CHECKOUT_CONFIG.taxRate;
-  const total = subtotal + shipping + tax;
-  const taxPercentLabel = Math.round(CHECKOUT_CONFIG.taxRate * 100);
+  
+  // Reverse-calculate subtotal (ex-VAT) and VAT amount
+  const subtotal = Math.round((totalWithVat / (1 + CHECKOUT_CONFIG.vatRate)) * 100) / 100;
+  const vat = Math.round((totalWithVat - subtotal) * 100) / 100;
+  const total = subtotal + vat + shipping;
+  const vatPercentLabel = Math.round(CHECKOUT_CONFIG.vatRate * 100);
   const savedShippingDetails = getSavedShippingDetails();
   const paymentMethod =
     savedShippingDetails.preferredPaymentMethod === PAYMENT_METHOD_COD
@@ -338,8 +341,8 @@ export function renderCheckoutPage() {
                             <span>${shipping === 0 ? "FREE" : formatPrice(shipping)}</span>
                         </div>
                         <div class="summary-row">
-                            <span>Tax (${taxPercentLabel}%)</span>
-                            <span>${formatPrice(tax)}</span>
+                            <span>VAT (${vatPercentLabel}%)</span>
+                            <span>${formatPrice(vat)}</span>
                         </div>
                         <div class="summary-total">
                             <span>Total</span>
@@ -464,16 +467,19 @@ export async function handleCheckout(event) {
     quantity: item.quantity,
   }));
 
-  const subtotal = orderedItems.reduce(
+  // Use VAT-inclusive model: item prices include VAT
+  const totalWithVat = orderedItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
   const shipping =
-    subtotal > CHECKOUT_CONFIG.freeShippingThreshold
+    totalWithVat > CHECKOUT_CONFIG.freeShippingThreshold
       ? 0
       : CHECKOUT_CONFIG.shippingFee;
-  const tax = subtotal * CHECKOUT_CONFIG.taxRate;
-  const total = subtotal + shipping + tax;
+
+  const subtotal = Math.round((totalWithVat / (1 + CHECKOUT_CONFIG.vatRate)) * 100) / 100;
+  const vat = Math.round((totalWithVat - subtotal) * 100) / 100;
+  const total = Math.round((totalWithVat + shipping) * 100) / 100;
 
   const shippingSummary = buildShippingSummary(form);
 
