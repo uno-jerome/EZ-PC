@@ -2,6 +2,8 @@
 
 This is the simple file to use for the project presentation.
 
+For slide-by-slide speaking points, also see [PRESENTATION_FLOW.md](PRESENTATION_FLOW.md).
+
 ## Use These Files Only
 
 - [ERD.md](ERD.md)

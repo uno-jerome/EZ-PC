@@ -45,7 +45,14 @@ Open this in your browser:
 - DB schema: [item_database_structure_new.sql](item_database_structure_new.sql)
 - Full dump with structure + sample data: [archive/item_database_latest.sql](archive/item_database_latest.sql)
 - Presentation docs: [PRESENTATION.md](PRESENTATION.md), [PRESENTATION.sql](PRESENTATION.sql), [ERD.md](ERD.md)
+- Presentation flow bullets: [PRESENTATION_FLOW.md](PRESENTATION_FLOW.md)
 - Utility/admin scripts: [scripts/](scripts/)
+
+## Project Notes
+- `composer.json` and `composer.lock` are tracked so dependency metadata stays with the project.
+- Local Composer artifacts like `vendor/` and `composer.phar` are ignored by `.gitignore` and should not be committed.
+- Two unused helper scripts were removed from the repo: `scripts/patch_orders.php` and `scripts/demo_status.php`.
+- Prices are stored VAT-inclusive in the database; checkout displays reverse-calculated VAT at the frontend only.
 
 ## API Endpoints
 
