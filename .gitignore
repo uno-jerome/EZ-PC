@@ -51,3 +51,4 @@ combined_products.xlsx
 # Copilot / GitHub instruction files (local only)
 # ------------------------------------------------------------
 .github/instructions/
+vendor/
